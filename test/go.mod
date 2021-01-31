@@ -14,6 +14,7 @@ require (
 	github.com/opencontainers/runtime-tools v0.0.0-20181011054405-1d69bd0f9c39
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.7.0
+	go.opencensus.io v0.22.3
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/sys v0.0.0-20210324051608-47abb6519492
 	google.golang.org/grpc v1.33.2
