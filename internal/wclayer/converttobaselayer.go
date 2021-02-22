@@ -16,14 +16,28 @@ import (
 
 var hiveNames = []string{"DEFAULT", "SAM", "SECURITY", "SOFTWARE", "SYSTEM"}
 
-// Ensure the given file exists as an ordinary file, and create a zero-length file if not.
-func ensureFile(path string, root *os.File) error {
+//go:generate go run mkminimalhive_windows.go -output zminimalhive_windows.go
+
+// Ensure the given file exists as an ordinary file, and create a minimal hive file if not.
+func ensureHive(path string, root *os.File) error {
 	stat, err := safefile.LstatRelative(path, root)
 	if err != nil && os.IsNotExist(err) {
-		newFile, err := safefile.OpenRelative(path, root, 0, syscall.FILE_SHARE_WRITE, winapi.FILE_CREATE, 0)
+		minimalHiveBytes, err := minimalHiveContents()
 		if err != nil {
 			return err
 		}
+
+		newFile, err := safefile.OpenRelative(path, root, syscall.GENERIC_WRITE, syscall.FILE_SHARE_WRITE, winapi.FILE_CREATE, 0)
+		if err != nil {
+			return err
+		}
+
+		_, err = newFile.Write(minimalHiveBytes)
+		if err != nil {
+			newFile.Close()
+			return err
+		}
+
 		return newFile.Close()
 	}
 
@@ -48,7 +62,7 @@ func ensureBaseLayer(root *os.File) (hasUtilityVM bool, err error) {
 
 	for _, hiveName := range hiveNames {
 		hivePath := filepath.Join(hiveSourcePath, hiveName)
-		if err = ensureFile(hivePath, root); err != nil {
+		if err = ensureHive(hivePath, root); err != nil {
 			return
 		}
 	}

@@ -10,6 +10,7 @@ require (
 	github.com/containerd/go-runc v1.0.0
 	github.com/containerd/ttrpc v1.0.2
 	github.com/containerd/typeurl v1.0.2
+	github.com/gabriel-samfira/go-hivex v0.0.0-20190725123041-b40bc95a7ced
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/go-containerregistry v0.5.1
 	github.com/linuxkit/virtsock v0.0.0-20201010232012-f8cee7dfc7a3
@@ -24,6 +25,7 @@ require (
 	go.opencensus.io v0.22.3
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
 	golang.org/x/sys v0.0.0-20210324051608-47abb6519492
+	golang.org/x/tools v0.0.0-20210106214847-113979e3529a
 	google.golang.org/grpc v1.33.2
 )
 
