@@ -268,3 +268,78 @@ func Test128Layers(t *testing.T) {
 	}
 
 }
+
+// TestLotsOfParallelMounts tests the theory that something in HCS is incorrectly
+// mutexed, and will generate spurious failures in the presence of lots of parallel
+// mount activity.
+func TestLotsOfParallelMounts(t *testing.T) {
+	if testing.Verbose() {
+		trace.ApplyConfig(trace.Config{DefaultSampler: trace.AlwaysSample()})
+		trace.RegisterExporter(&oc.LogrusExporter{})
+	}
+
+	// Get temp dir, and create base-dir with Files/ directory
+	tempDir := testutilities.CreateTempDir(t)
+	t.Cleanup(func() {
+		if err := os.RemoveAll(tempDir); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	baseDir := filepath.Join(tempDir, "layer-0")
+
+	if err := os.MkdirAll(filepath.Join(baseDir, "Files"), 0); err != nil {
+		t.Fatal(err)
+	}
+
+	// Turn it into a Base Layer
+	if err := wclayer.ConvertToBaseLayer(context.Background(), baseDir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := wclayer.DestroyLayer(context.Background(), baseDir); err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("1", makeTestAMountALot(baseDir))
+	t.Run("2", makeTestAMountALot(baseDir))
+	t.Run("3", makeTestAMountALot(baseDir))
+	t.Run("4", makeTestAMountALot(baseDir))
+	t.Run("5", makeTestAMountALot(baseDir))
+	t.Run("6", makeTestAMountALot(baseDir))
+	t.Run("7", makeTestAMountALot(baseDir))
+	t.Run("8", makeTestAMountALot(baseDir))
+}
+
+// testAMountALot
+func makeTestAMountALot(baseDir string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
+
+		tempDir := testutilities.CreateTempDir(t)
+		t.Cleanup(func() {
+			if err := os.RemoveAll(tempDir); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		scratchDir := filepath.Join(tempDir, "layer-1")
+
+		// Create a scratch on our base dir
+		layers := []string{baseDir, scratchDir}
+
+		createScratch(t, layers)
+		t.Cleanup(func() {
+			if err := wclayer.DestroyLayer(context.Background(), scratchDir); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		// Now mount and unmount it
+		for i := 1; i <= 127; i++ {
+			mountLayer(t, layers)
+			unmountLayer(t, layers)
+		}
+	}
+}

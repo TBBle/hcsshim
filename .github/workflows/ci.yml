@@ -43,6 +43,8 @@ jobs:
         working-directory: test
       - run: go test -gcflags=all=-d=checkptr -v -run Test128Layers ./functional/ -tags functional
         working-directory: test
+      - run: go test -gcflags=all=-d=checkptr -v -run TestLotsOfParallelMounts ./functional/ -tags functional
+        working-directory: test
       - run: go build -o sample-logging-driver.exe ./cri-containerd/helpers/log.go
         working-directory: test
 
