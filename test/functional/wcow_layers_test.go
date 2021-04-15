@@ -337,22 +337,20 @@ func makeTestAMountALot(baseDir string) func(t *testing.T) {
 			}
 		})
 
-		scratchDir := filepath.Join(tempDir, "layer-1")
+		// Now mount and unmount it
+		for i := 1; i <= 127; i++ {
+			scratchDir := filepath.Join(tempDir, fmt.Sprintf("layer-%d", i))
 
-		// Create a scratch on our base dir
-		layers := []string{baseDir, scratchDir}
+			// Create a scratch on our base dir
+			layers := []string{baseDir, scratchDir}
 
-		createScratch(t, layers)
-		t.Cleanup(func() {
+			createScratch(t, layers)
+			mountLayer(t, layers)
+			unmountLayer(t, layers)
+			restreamLayer(t, layers)
 			if err := wclayer.DestroyLayer(context.Background(), scratchDir); err != nil {
 				t.Fatal(err)
 			}
-		})
-
-		// Now mount and unmount it
-		for i := 1; i <= 127; i++ {
-			mountLayer(t, layers)
-			unmountLayer(t, layers)
 		}
 	}
 }
