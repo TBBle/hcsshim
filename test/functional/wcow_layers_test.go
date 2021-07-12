@@ -3,6 +3,7 @@
 package functional
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -209,11 +210,12 @@ func test128Layers(t *testing.T) {
 	}
 
 	// Apply the above filesystem changes
-	createFile(t, filepath.Join(baseDir, "Files"), "bottom", []byte("way at the bottom\n"))
-	createFile(t, filepath.Join(baseDir, "Files"), "overwriteme", []byte("FIRST!\n"))
-	createDir(t, filepath.Join(baseDir, "Files"), "addhere")
-	createDir(t, filepath.Join(baseDir, "Files"), "onlyme")
-	createFile(t, filepath.Join(baseDir, "Files"), filepath.Join("onlyme", "bottom"), []byte("bye!\n"))
+	createDir(t, filepath.Join(baseDir, "Files"), "wcow_workaround")
+	// createFile(t, filepath.Join(baseDir, "Files"), filepath.Join("wcow_workaround", "bottom"), []byte("way at the bottom\n"))
+	// createFile(t, filepath.Join(baseDir, "Files"), filepath.Join("wcow_workaround", "overwriteme"), []byte("FIRST!\n"))
+	createDir(t, filepath.Join(baseDir, "Files"), filepath.Join("wcow_workaround", "addhere"))
+	// createDir(t, filepath.Join(baseDir, "Files"), filepath.Join("wcow_workaround", "onlyme"))
+	// createFile(t, filepath.Join(baseDir, "Files"), filepath.Join("wcow_workaround", "onlyme", "bottom"), []byte("bye!\n"))
 
 	// Turn it into a Base Layer
 	if err := wclayer.ConvertToBaseLayer(context.Background(), baseDir); err != nil {
@@ -253,11 +255,22 @@ func test128Layers(t *testing.T) {
 		}
 
 		// Perform the changes
-		createFile(t, mountPath, "overwriteme", []byte(fmt.Sprintf("%d WAS HERE!\n", i)))
-		createFile(t, mountPath, filepath.Join("addhere", fmt.Sprintf("file-%d", i)), []byte("same\n"))
-		removeAll(t, mountPath, "onlyme")
-		createDir(t, mountPath, "onlyme")
-		createFile(t, mountPath, filepath.Join("onlyme", fmt.Sprintf("file-%d", i)), []byte("only me!\n"))
+		// createFile(t, mountPath, filepath.Join("wcow_workaround", "overwriteme"), []byte(fmt.Sprintf("%d WAS HERE!\n", i)))
+		createFile(t, mountPath, filepath.Join("wcow_workaround", "addhere", fmt.Sprintf("file-%d", i)), []byte("same\n"))
+		// removeAll(t, mountPath, filepath.Join("wcow_workaround", "onlyme"))
+		// createDir(t, mountPath, filepath.Join("wcow_workaround", "onlyme"))
+		// createFile(t, mountPath, filepath.Join("wcow_workaround", "onlyme", fmt.Sprintf("file-%d", i)), []byte("only me!\n"))
+
+		for j := 1; j <= i; j++ {
+			addedFilePath := filepath.Join(mountPath, "wcow_workaround", "addhere", fmt.Sprintf("file-%d", j))
+			content, err := ioutil.ReadFile(addedFilePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if bytes.Compare(content, []byte("same\n")) != 0 {
+				t.Fatalf("Failed to read back %s", addedFilePath)
+			}
+		}
 
 		// Unmount the scratch
 		if err := deleteVolumeMountPoint(mountPath); err != nil {
