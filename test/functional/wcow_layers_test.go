@@ -253,6 +253,10 @@ func test128Layers(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		if err := ioutil.WriteFile(mountPath+":containerd.io-source", []byte(volumePath), 0666); err != nil {
+			t.Fatal(err)
+		}
+
 		// Perform the changes
 		// createFile(t, mountPath, filepath.Join("wcow_workaround", "overwriteme"), []byte(fmt.Sprintf("%d WAS HERE!\n", i)))
 		// createFile(t, mountPath, filepath.Join("wcow_workaround", "addhere", fmt.Sprintf("file-%d", i)), []byte("same\n"))
