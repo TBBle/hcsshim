@@ -274,7 +274,7 @@ func test128Layers(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if bytes.Compare([]byte(volumePath), volumePathb) != 0 {
+		if !bytes.Equal([]byte(volumePath), volumePathb) {
 			t.Fatalf("volumePath read back incorrectly, expected %v, got %v", []byte(volumePath), volumePathb)
 		}
 
