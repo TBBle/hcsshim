@@ -187,7 +187,7 @@ func Test128Layers(t *testing.T) {
 		trace.RegisterExporter(&oc.LogrusExporter{})
 	}
 
-	for i := 1; i <= 1; i++ {
+	for i := 1; i <= 10; i++ {
 		t.Run(fmt.Sprintf("test128Layers_%02d", i), test128Layers)
 	}
 }
