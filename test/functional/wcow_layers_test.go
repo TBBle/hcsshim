@@ -203,7 +203,7 @@ func test128Layers(t *testing.T) {
 		}
 	})
 
-	baseDir := filepath.Join(tempDir, "layer-1")
+	baseDir := filepath.Join(tempDir, "1")
 
 	if err := os.MkdirAll(filepath.Join(baseDir, "Files"), 0); err != nil {
 		t.Fatal(err)
@@ -231,7 +231,7 @@ func test128Layers(t *testing.T) {
 
 	// Now loop:
 	for i := 2; i <= 128; i++ {
-		scratchDir := filepath.Join(tempDir, fmt.Sprintf("layer-%d", i))
+		scratchDir := filepath.Join(tempDir, fmt.Sprintf("%d", i))
 
 		// Mount a scratch on our list
 		layers = append(layers, scratchDir)
