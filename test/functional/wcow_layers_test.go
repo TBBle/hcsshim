@@ -3,6 +3,7 @@
 package functional
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -78,16 +79,16 @@ func removeAll(t *testing.T, root, path string) {
 	}
 }
 
-func mountLayer(t *testing.T, layerStack []string) string {
-	volumePath, err := layerspkg.MountContainerLayers(context.Background(), layerStack, "", "", nil)
+func mountLayer(t *testing.T, layerStack []string, mountPath string) string {
+	volumePath, err := layerspkg.MountContainerLayers(context.Background(), layerStack, "", mountPath+"\\", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	return volumePath
 }
 
-func unmountLayer(t *testing.T, layerStack []string) {
-	if err := layerspkg.UnmountContainerLayers(context.Background(), layerStack, "", "", nil, layerspkg.UnmountOperationAll); err != nil {
+func unmountLayer(t *testing.T, layerStack []string, mountPath string) {
+	if err := layerspkg.UnmountContainerLayers(context.Background(), layerStack, "", mountPath+"\\", nil, layerspkg.UnmountOperationAll); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -242,16 +243,8 @@ func test128Layers(t *testing.T) {
 			}
 		})
 
-		volumePath := mountLayer(t, layers)
-
 		mountPath := filepath.Join(tempDir, fmt.Sprintf("mount-%d", i))
-		if err := os.MkdirAll(mountPath, 0); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := setVolumeMountPoint(mountPath, volumePath); err != nil {
-			t.Fatal(err)
-		}
+		volumePath := mountLayer(t, layers, mountPath)
 
 		if err := ioutil.WriteFile(mountPath+":containerd.io-source", []byte(volumePath), 0666); err != nil {
 			t.Fatal(err)
@@ -275,16 +268,18 @@ func test128Layers(t *testing.T) {
 		// 	}
 		// }
 
+		volumePathb, err := ioutil.ReadFile(mountPath + ":containerd.io-source")
+		if err != nil {
+			unmountLayer(t, layers, mountPath)
+			t.Fatal(err)
+		}
+
+		if bytes.Compare([]byte(volumePath), volumePathb) != 0 {
+			t.Fatalf("volumePath read back incorrectly, expected %v, got %v", []byte(volumePath), volumePathb)
+		}
+
 		// Unmount the scratch
-		if err := deleteVolumeMountPoint(mountPath); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := os.Remove(mountPath); err != nil {
-			t.Fatal(err)
-		}
-
-		unmountLayer(t, layers)
+		unmountLayer(t, layers, mountPath)
 
 		// Restream it as a read-only layer
 		restreamLayer(t, layers)
@@ -356,8 +351,8 @@ func makeTestAMountALot(baseDir string) func(t *testing.T) {
 			layers := []string{baseDir, scratchDir}
 
 			createScratch(t, layers)
-			mountLayer(t, layers)
-			unmountLayer(t, layers)
+			mountLayer(t, layers, "")
+			unmountLayer(t, layers, "")
 			restreamLayer(t, layers)
 			if err := wclayer.DestroyLayer(context.Background(), scratchDir); err != nil {
 				t.Fatal(err)
