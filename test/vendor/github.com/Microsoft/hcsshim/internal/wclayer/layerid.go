@@ -2,7 +2,6 @@ package wclayer
 
 import (
 	"context"
-	"path/filepath"
 
 	"github.com/Microsoft/go-winio/pkg/guid"
 	"github.com/Microsoft/hcsshim/internal/oc"
@@ -17,6 +16,5 @@ func LayerID(ctx context.Context, path string) (_ guid.GUID, err error) {
 	defer func() { oc.SetSpanStatus(span, err) }()
 	span.AddAttributes(trace.StringAttribute("path", path))
 
-	_, file := filepath.Split(path)
-	return NameToGuid(ctx, file)
+	return NameToGuid(ctx, path)
 }
