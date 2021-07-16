@@ -66,6 +66,7 @@ jobs:
       - run: go build ./cmd/runhcs
       - run: go build ./cmd/tar2ext4
       - run: go build ./cmd/wclayer
+      - run: go build ./cmd/wclayer-v2
       - run: go build ./cmd/device-util
       - run: go build ./cmd/ncproxy
       - run: go build ./cmd/dmverity-vhd
